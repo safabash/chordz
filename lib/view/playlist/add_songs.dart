@@ -1,23 +1,20 @@
-import 'package:chordz_app/db/playlist_db.dart';
-import 'package:chordz_app/widgets/songstore.dart';
-import 'package:chordz_app/widgets/style.dart';
+import 'package:chordz_app/controller/database/playlist_db.dart';
+import 'package:chordz_app/view/widgets/songstore.dart';
+import 'package:chordz_app/view//widgets/style.dart';
 import 'package:flutter/material.dart';
 
 import 'package:on_audio_query/on_audio_query.dart';
+import 'package:provider/provider.dart';
 
-import '../model/musicplayer.dart';
+import '../../model/musicplayer.dart';
 
-class AddSongs extends StatefulWidget {
-  const AddSongs({Key? key, required this.playlist}) : super(key: key);
+class AddSongs extends StatelessWidget {
+  AddSongs({Key? key, required this.playlist}) : super(key: key);
   final MusicPlayer playlist;
   static List<SongModel> song = [];
   @override
-  State<AddSongs> createState() => _AddSongsState();
-}
+  final OnAudioQuery _audioQuery = OnAudioQuery();
 
-final OnAudioQuery _audioQuery = OnAudioQuery();
-
-class _AddSongsState extends State<AddSongs> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -72,8 +69,6 @@ class _AddSongsState extends State<AddSongs> {
             GetSongs.songscopy = item.data!;
             return Padding(
                 padding: const EdgeInsets.all(16.0),
-                // child: ValueListenableBuilder(
-                //   valueListenable: Hive.box('favorites').listenable,
                 child: ListView.separated(
                   itemBuilder: (context, index) => ListTile(
                       shape: const RoundedRectangleBorder(
@@ -96,19 +91,21 @@ class _AddSongsState extends State<AddSongs> {
                         overflow: TextOverflow.fade,
                         maxLines: 1,
                       ),
-                      trailing: IconButton(
-                        onPressed: () {
-                          setState(() {
-                            playlistCheck(item.data![index]);
-                            PlaylistDB.playlistDbNotifier.notifyListeners();
-                          });
+                      trailing: Consumer(
+                        builder: (BuildContext context, PlaylistDB value,
+                            Widget? child) {
+                          return IconButton(
+                            onPressed: () {
+                              playlistCheck(item.data![index], context);
+                            },
+                            icon: !playlist.isValueIn(item.data![index].id)
+                                ? const Icon(
+                                    Icons.add,
+                                    color: Color.fromARGB(255, 255, 255, 255),
+                                  )
+                                : const Icon(Icons.check, color: Colors.white),
+                          );
                         },
-                        icon: !widget.playlist.isValueIn(item.data![index].id)
-                            ? const Icon(
-                                Icons.add,
-                                color: Color.fromARGB(255, 255, 255, 255),
-                              )
-                            : const Icon(Icons.check, color: Colors.white),
                       )),
                   separatorBuilder: (BuildContext context, int index) =>
                       const Divider(height: 15),
@@ -120,16 +117,26 @@ class _AddSongsState extends State<AddSongs> {
     );
   }
 
-  playlistCheck(SongModel data) {
-    if (!widget.playlist.isValueIn(data.id)) {
-      widget.playlist.add(data.id);
-
+  void playlistCheck(SongModel data, context) {
+    if (!playlist.isValueIn(data.id)) {
+      playlist.add(data.id);
       const snackbar = SnackBar(
           backgroundColor: Colors.black,
           content: Text(
             'Added to Playlist',
             style: TextStyle(color: Colors.white),
-          ));
+          ),
+          duration: Duration(milliseconds: 250));
+      ScaffoldMessenger.of(context).showSnackBar(snackbar);
+    } else {
+      playlist.deleteData(data.id);
+      const snackbar = SnackBar(
+          backgroundColor: Colors.black,
+          content: Text(
+            'Removed from Playlist',
+            style: TextStyle(color: Colors.white),
+          ),
+          duration: Duration(milliseconds: 250));
       ScaffoldMessenger.of(context).showSnackBar(snackbar);
     }
   }

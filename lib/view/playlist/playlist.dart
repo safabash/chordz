@@ -1,24 +1,20 @@
-import 'package:chordz_app/playlist/inside_playlist.dart';
+import 'package:chordz_app/view/playlist/inside_playlist.dart';
 import 'package:chordz_app/model/musicplayer.dart';
 
 import 'package:flutter/material.dart';
-import 'package:chordz_app/widgets/glass.dart';
+import 'package:chordz_app/view/widgets/glass.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:lottie/lottie.dart';
+import 'package:provider/provider.dart';
 
-import '../db/playlist_db.dart';
+import '../../controller/database/playlist_db.dart';
 
-class Playlist extends StatefulWidget {
-  const Playlist({Key? key}) : super(key: key);
+class Playlist extends StatelessWidget {
+  Playlist({Key? key}) : super(key: key);
 
-  @override
-  State<Playlist> createState() => _PlaylistState();
-}
+  final nameController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-final nameController = TextEditingController();
-final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-class _PlaylistState extends State<Playlist> {
   @override
   Widget build(BuildContext context) {
     FocusManager.instance.primaryFocus?.unfocus();
@@ -37,104 +33,107 @@ class _PlaylistState extends State<Playlist> {
                         showDialog(
                             context: context,
                             builder: (BuildContext context) {
-                              return Dialog(
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20.0)),
-                                child: SizedBox(
-                                  height: 250,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(12.0),
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Center(
-                                          child: Text(
-                                            'Create Your Playlist',
-                                            style: TextStyle(
-                                                fontSize: 25,
-                                                fontWeight: FontWeight.bold),
+                              {
+                                return Dialog(
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(20.0)),
+                                  child: SizedBox(
+                                    height: 250,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(12.0),
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Center(
+                                            child: Text(
+                                              'Create Your Playlist',
+                                              style: TextStyle(
+                                                  fontSize: 25,
+                                                  fontWeight: FontWeight.bold),
+                                            ),
                                           ),
-                                        ),
-                                        const SizedBox(
-                                          height: 30,
-                                        ),
-                                        Form(
-                                          key: _formKey,
-                                          child: TextFormField(
-                                              controller: nameController,
-                                              decoration: const InputDecoration(
-                                                  border: InputBorder.none,
-                                                  hintText: ' Playlist Name'),
-                                              validator: (value) {
-                                                if (value == null ||
-                                                    value.isEmpty) {
-                                                  return "Please enter playlist name";
-                                                } else {
-                                                  return null;
-                                                }
-                                              }),
-                                        ),
-                                        const SizedBox(
-                                          height: 20,
-                                        ),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceEvenly,
-                                          children: [
-                                            SizedBox(
-                                                width: 100.0,
-                                                child: ElevatedButton(
-                                                    style: ElevatedButton
-                                                        .styleFrom(
-                                                            primary: const Color
-                                                                    .fromARGB(
-                                                                255,
-                                                                95,
-                                                                38,
-                                                                109)),
-                                                    onPressed: () {
-                                                      nameController.clear();
-                                                      Navigator.of(context)
-                                                          .pop();
-                                                    },
-                                                    child: const Text(
-                                                      'Cancel',
-                                                      style: TextStyle(
-                                                          color: Colors.white),
-                                                    ))),
-                                            SizedBox(
-                                                width: 100.0,
-                                                child: ElevatedButton(
-                                                    style: ElevatedButton
-                                                        .styleFrom(
-                                                            primary: const Color
-                                                                    .fromARGB(
-                                                                255,
-                                                                95,
-                                                                38,
-                                                                109)),
-                                                    onPressed: () {
-                                                      if (_formKey.currentState!
-                                                          .validate()) {
-                                                        whenButtonClicked();
-                                                        Navigator.pop(context);
-                                                      }
-                                                    },
-                                                    child: const Text(
-                                                      'Save',
-                                                      style: TextStyle(
-                                                          color: Colors.white),
-                                                    ))),
-                                          ],
-                                        ),
-                                      ],
+                                          const SizedBox(
+                                            height: 30,
+                                          ),
+                                          Form(
+                                              key: _formKey,
+                                              child: TextFormField(
+                                                controller: nameController,
+                                                decoration:
+                                                    const InputDecoration(
+                                                        border:
+                                                            InputBorder.none,
+                                                        hintText:
+                                                            ' Playlist Name'),
+                                              )),
+                                          const SizedBox(
+                                            height: 20,
+                                          ),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                              SizedBox(
+                                                  width: 100.0,
+                                                  child: ElevatedButton(
+                                                      style: ElevatedButton
+                                                          .styleFrom(
+                                                              primary: const Color
+                                                                      .fromARGB(
+                                                                  255,
+                                                                  95,
+                                                                  38,
+                                                                  109)),
+                                                      onPressed: () {
+                                                        nameController.clear();
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      },
+                                                      child: const Text(
+                                                        'Cancel',
+                                                        style: TextStyle(
+                                                            color:
+                                                                Colors.white),
+                                                      ))),
+                                              SizedBox(
+                                                  width: 100.0,
+                                                  child: ElevatedButton(
+                                                      style: ElevatedButton
+                                                          .styleFrom(
+                                                              primary: const Color
+                                                                      .fromARGB(
+                                                                  255,
+                                                                  95,
+                                                                  38,
+                                                                  109)),
+                                                      onPressed: () {
+                                                        if (_formKey
+                                                            .currentState!
+                                                            .validate()) {
+                                                          whenButtonClicked(
+                                                              context);
+                                                          Navigator.pop(
+                                                              context);
+                                                        }
+                                                      },
+                                                      child: const Text(
+                                                        'Save',
+                                                        style: TextStyle(
+                                                            color:
+                                                                Colors.white),
+                                                      ))),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                              );
+                                );
+                              }
                             });
                       },
                       icon: const Icon(Icons.playlist_add))
@@ -333,9 +332,9 @@ class _PlaylistState extends State<Playlist> {
         });
   }
 
-  Future<void> whenButtonClicked() async {
+  Future<void> whenButtonClicked(context) async {
     final name = nameController.text.trim();
-
+    {}
     if (name.isEmpty) {
       return;
     } else {
@@ -343,7 +342,7 @@ class _PlaylistState extends State<Playlist> {
         songIds: [],
         name: name,
       );
-      PlaylistDB.playlistAdd(music);
+      Provider.of<PlaylistDB>(context, listen: false).playlistAdd(music);
       nameController.clear();
     }
   }

@@ -1,57 +1,29 @@
-import 'package:chordz_app/widgets/songstore.dart';
+import 'package:chordz_app/controller/provider/now_playing_provider.dart';
+import 'package:chordz_app/view/widgets/songstore.dart';
 import 'package:flutter/material.dart';
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
+import 'package:provider/provider.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
-import 'db/favorite_btn.dart';
+import 'favorites/favorite_btn.dart';
 
-class NowPlaying extends StatefulWidget {
-  const NowPlaying({
+class NowPlaying extends StatelessWidget {
+  NowPlaying({
     Key? key,
     required this.playerSong,
   }) : super(key: key);
-  final List<SongModel> playerSong;
-
-  @override
-  State<NowPlaying> createState() => _NowPlayingState();
-}
-
-class _NowPlayingState extends State<NowPlaying> {
-  bool _isPlaying = true;
-  int currentIndex = 0;
-  Duration _duration = const Duration();
-  Duration _position = const Duration();
-  @override
-  void initState() {
-    GetSongs.player.currentIndexStream.listen((index) {
-      if (index != null && mounted) {
-        setState(() {
-          currentIndex = index;
-        });
-      }
-    });
-
-    super.initState();
-    playSong();
-  }
-
-  void playSong() {
-    GetSongs.player.durationStream.listen((d) {
-      setState(() {
-        _duration = d!;
-      });
-    });
-    GetSongs.player.positionStream.listen((p) {
-      setState(() {
-        _position = p;
-      });
-    });
-  }
+  List<SongModel> playerSong;
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<ProviderNowPlaying>(context, listen: false);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      GetSongs.player.currentIndexStream.listen((index) {
+        provider.mountFunction(index);
+      });
+    });
     return Scaffold(
         extendBody: true,
         backgroundColor: Colors.transparent,
@@ -85,50 +57,66 @@ class _NowPlayingState extends State<NowPlaying> {
             child: Column(
               children: [
                 const SizedBox(height: 70),
-                QueryArtworkWidget(
-                  keepOldArtwork: true,
-                  quality: 100,
-                  artworkBorder: BorderRadius.circular(100),
-                  nullArtworkWidget: const CircleAvatar(
-                    radius: 120,
-                    backgroundColor: Color.fromARGB(255, 109, 44, 134),
-                    child: Icon(
-                      Icons.music_note,
-                      size: 100,
-                    ),
-                  ),
-                  id: widget.playerSong[currentIndex].id,
-                  type: ArtworkType.AUDIO,
-                  artworkFit: BoxFit.cover,
-                  artworkWidth: 200,
-                  artworkHeight: 200,
+                Consumer(
+                  builder: (BuildContext context, ProviderNowPlaying value,
+                      Widget? child) {
+                    return QueryArtworkWidget(
+                      keepOldArtwork: true,
+                      quality: 100,
+                      artworkBorder: BorderRadius.circular(100),
+                      nullArtworkWidget: const CircleAvatar(
+                        radius: 120,
+                        backgroundColor: Color.fromARGB(255, 109, 44, 134),
+                        child: Icon(
+                          Icons.music_note,
+                          size: 100,
+                        ),
+                      ),
+                      id: playerSong[value.currentIndex].id,
+                      type: ArtworkType.AUDIO,
+                      artworkFit: BoxFit.cover,
+                      artworkWidth: 200,
+                      artworkHeight: 200,
+                    );
+                  },
                 ),
                 const SizedBox(
                   height: 30,
                 ),
-                Text(
-                  widget.playerSong[currentIndex].displayNameWOExt,
-                  overflow: TextOverflow.fade,
-                  maxLines: 1,
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 25,
-                      fontFamily: 'Pacifico'),
-                  textAlign: TextAlign.center,
-                ),
-                Text(
-                  widget.playerSong[currentIndex].artist.toString() ==
-                          "<unknown>"
-                      ? "Unknown Artist"
-                      : widget.playerSong[currentIndex].artist.toString(),
-                  overflow: TextOverflow.fade,
-                  maxLines: 1,
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 17,
-                      fontFamily: 'Pacifico'),
-                  textAlign: TextAlign.center,
+                Consumer(
+                  builder: (BuildContext context, ProviderNowPlaying value,
+                      Widget? child) {
+                    return Column(
+                      children: [
+                        Text(
+                          playerSong[value.currentIndex].displayNameWOExt,
+                          overflow: TextOverflow.fade,
+                          maxLines: 1,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 25,
+                              fontFamily: 'Pacifico'),
+                          textAlign: TextAlign.center,
+                        ),
+                        Text(
+                          playerSong[value.currentIndex].artist.toString() ==
+                                  "<unknown>"
+                              ? "Unknown Artist"
+                              : playerSong[value.currentIndex]
+                                  .artist
+                                  .toString(),
+                          overflow: TextOverflow.fade,
+                          maxLines: 1,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 17,
+                              fontFamily: 'Pacifico'),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(height: 30),
                 Padding(
@@ -176,7 +164,7 @@ class _NowPlayingState extends State<NowPlaying> {
                     IconButton(
                         onPressed: () async {
                           if (GetSongs.player.hasPrevious) {
-                            _isPlaying = true;
+                            provider.isPlaying = true;
                             await GetSongs.player.seekToPrevious();
                             await GetSongs.player.play();
                           } else {
@@ -188,28 +176,31 @@ class _NowPlayingState extends State<NowPlaying> {
                           size: 40,
                           color: Colors.white,
                         )),
-                    FloatingActionButton(
-                      onPressed: () {
-                        setState(() {
-                          if (_isPlaying) {
-                            _isPlaying = true;
+                    Consumer<ProviderNowPlaying>(
+                        builder: (BuildContext context, value, Widget? child) {
+                      return FloatingActionButton(
+                        onPressed: () {
+                          if (value.isPlaying) {
+                            value.isPlaying = true;
                             GetSongs.player.pause();
                           } else {
                             GetSongs.player.play();
+                            value.isPlaying = false;
                           }
-                          _isPlaying = !_isPlaying;
-                        });
-                      },
-                      hoverColor: Colors.white,
-                      backgroundColor: Colors.black,
-                      elevation: 0.0,
-                      child: Icon(
-                          _isPlaying ? Icons.pause : Icons.play_arrow_rounded),
-                    ),
+                          value.listen();
+                        },
+                        hoverColor: Colors.white,
+                        backgroundColor: Colors.black,
+                        elevation: 0.0,
+                        child: value.isPlaying == true
+                            ? const Icon(Icons.pause)
+                            : const Icon(Icons.play_arrow_rounded),
+                      );
+                    }),
                     IconButton(
                       onPressed: () async {
                         if (GetSongs.player.hasNext) {
-                          _isPlaying = true;
+                          provider.isPlaying = true;
                           await GetSongs.player.seekToNext();
                           await GetSongs.player.play();
                         } else {
@@ -232,7 +223,7 @@ class _NowPlayingState extends State<NowPlaying> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    FavoriteBut(song: widget.playerSong[currentIndex]),
+                    FavoriteBut(song: playerSong[provider.currentIndex]),
                   ],
                 )
               ],

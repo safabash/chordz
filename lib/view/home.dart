@@ -1,37 +1,25 @@
-import 'package:chordz_app/db/favorite_db.dart';
-import 'package:chordz_app/playing.dart';
-import 'package:chordz_app/settings.dart';
-import 'package:chordz_app/widgets/songstore.dart';
-import 'package:chordz_app/widgets/style.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:chordz_app/view/playing.dart';
+import 'package:chordz_app/view/settings/settings.dart';
+import 'package:chordz_app/view/widgets/songstore.dart';
+import 'package:chordz_app/view/widgets/style.dart';
 import 'package:flutter/material.dart';
 import 'package:on_audio_query/on_audio_query.dart';
+import 'package:provider/provider.dart';
 
-import 'db/favorite_btn.dart';
+import '../controller/database/favorite_db.dart';
+import '../controller/provider/home_provider.dart';
+import 'favorites/favorite_btn.dart';
 
-class Home extends StatefulWidget {
+class Home extends StatelessWidget {
   const Home({Key? key}) : super(key: key);
-  static List<SongModel> song = [];
-
-  @override
-  State<Home> createState() => _HomeState();
-}
-
-class _HomeState extends State<Home> {
-  @override
-  void initState() {
-    super.initState();
-    requestPermission();
-  }
-
-  void requestPermission() async {
-    await Permission.storage.request();
-  }
-
-  final OnAudioQuery _audioQuery = OnAudioQuery();
 
   @override
   Widget build(BuildContext context) {
+    FocusManager.instance.primaryFocus?.unfocus();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      Provider.of<ProviderHome>(context, listen: false).requestPermission();
+    });
+    FocusManager.instance.primaryFocus?.unfocus();
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
@@ -69,11 +57,13 @@ class _HomeState extends State<Home> {
           end: Alignment.bottomLeft,
         )),
         child: FutureBuilder<List<SongModel>>(
-          future: _audioQuery.querySongs(
-              sortType: null,
-              orderType: OrderType.ASC_OR_SMALLER,
-              uriType: UriType.EXTERNAL,
-              ignoreCase: true),
+          future: Provider.of<ProviderHome>(context, listen: false)
+              .audioQuery
+              .querySongs(
+                  sortType: null,
+                  orderType: OrderType.ASC_OR_SMALLER,
+                  uriType: UriType.EXTERNAL,
+                  ignoreCase: true),
           builder: (context, item) {
             if (item.data == null) {
               return const Center(
@@ -83,7 +73,7 @@ class _HomeState extends State<Home> {
             if (item.data!.isEmpty) {
               return const Center(child: Text('No Songs Found'));
             }
-            Home.song = item.data!;
+            ProviderHome.song = item.data!;
             if (!FavoriteDB.isInitialized) {
               FavoriteDB.initialise(item.data!);
             }
@@ -113,7 +103,7 @@ class _HomeState extends State<Home> {
                       overflow: TextOverflow.fade,
                       maxLines: 1,
                     ),
-                    trailing: FavoriteBut(song: Home.song[index]),
+                    trailing: FavoriteBut(song: ProviderHome.song[index]),
                     onTap: () {
                       GetSongs.player.setAudioSource(
                           GetSongs.createSongList(item.data!),

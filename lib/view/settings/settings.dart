@@ -1,20 +1,16 @@
-import 'package:chordz_app/privacy_policy.dart';
-import 'package:chordz_app/widgets/style.dart';
+import 'package:chordz_app/controller/database/playlist_db.dart';
+import 'package:chordz_app/view/settings/privacy_policy.dart';
+import 'package:chordz_app/view/widgets/style.dart';
 import 'package:flutter/material.dart';
-import 'package:restart_app/restart_app.dart';
+import 'package:provider/provider.dart';
+
 import 'package:share_plus/share_plus.dart';
 
 import 'about.dart';
 
-class Settings extends StatefulWidget {
+class Settings extends StatelessWidget {
   const Settings({Key? key}) : super(key: key);
 
-  @override
-  State<Settings> createState() => _SettingsState();
-}
-
-class _SettingsState extends State<Settings> {
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
         extendBody: true,
@@ -69,7 +65,8 @@ class _SettingsState extends State<Settings> {
                       style: Style.liststyle2,
                     ),
                     onTap: () async {
-                      await Share.share('Share this App');
+                      await Share.share(
+                          'https://play.google.com/store/apps/details?id=in.brototype.chordz_app');
                     },
                     leading: const Icon(Icons.share, color: Colors.white)),
                 ListTile(
@@ -78,12 +75,28 @@ class _SettingsState extends State<Settings> {
                       style: Style.liststyle2,
                     ),
                     onTap: () {
-                      Restart.restartApp();
+                      Provider.of<PlaylistDB>(context, listen: false)
+                          .appReset(context);
+                      // Restart.restartApp();
                     },
                     leading: const Icon(Icons.restore, color: Colors.white)),
+                ListTile(
+                    title: Text(
+                      'Privacy policy',
+                      style: Style.liststyle2,
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const Privacy()),
+                      );
+                    },
+                    leading: const Icon(Icons.privacy_tip_outlined,
+                        color: Colors.white)),
                 const SizedBox(height: 290),
                 const Text(
-                  'v 1.01',
+                  'v 1.02',
                   style: TextStyle(color: Colors.white),
                 ),
               ],

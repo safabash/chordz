@@ -1,25 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:chordz_app/db/favorite_db.dart';
+import 'package:chordz_app/controller/database/favorite_db.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
-class FavoriteBut extends StatefulWidget {
+class FavoriteBut extends StatelessWidget {
   const FavoriteBut({Key? key, required this.song}) : super(key: key);
   final SongModel song;
 
-  @override
-  State<FavoriteBut> createState() => _FavoriteButState();
-}
-
-class _FavoriteButState extends State<FavoriteBut> {
-  @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
         valueListenable: FavoriteDB.favoriteSongs,
         builder: (BuildContext ctx, List<SongModel> favorData, Widget? child) {
           return IconButton(
             onPressed: () {
-              if (FavoriteDB.isfavor(widget.song)) {
-                FavoriteDB.delete(widget.song.id);
+              if (FavoriteDB.isfavor(song)) {
+                FavoriteDB.delete(song.id);
                 //FavoriteDB.favoriteSongs.notifyListeners();
 
                 const snackBar = SnackBar(
@@ -31,7 +25,7 @@ class _FavoriteButState extends State<FavoriteBut> {
                 );
                 ScaffoldMessenger.of(context).showSnackBar(snackBar);
               } else {
-                FavoriteDB.add(widget.song);
+                FavoriteDB.add(song);
                 //   FavoriteDB.favoriteSongs.notifyListeners();
                 const snackbar = SnackBar(
                   backgroundColor: Colors.black,
@@ -46,7 +40,7 @@ class _FavoriteButState extends State<FavoriteBut> {
 
               FavoriteDB.favoriteSongs.notifyListeners();
             },
-            icon: FavoriteDB.isfavor(widget.song)
+            icon: FavoriteDB.isfavor(song)
                 ? Icon(
                     Icons.favorite,
                     color: Colors.red[900],

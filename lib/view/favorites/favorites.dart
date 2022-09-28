@@ -1,21 +1,15 @@
-import 'package:chordz_app/db/favorite_db.dart';
-import 'package:chordz_app/widgets/style.dart';
+import 'package:chordz_app/controller/database/favorite_db.dart';
+import 'package:chordz_app/view/widgets/style.dart';
 import 'package:flutter/material.dart';
 
-import 'package:chordz_app/playing.dart';
+import 'package:chordz_app/view/playing.dart';
 import 'package:lottie/lottie.dart';
 import 'package:on_audio_query/on_audio_query.dart';
-import 'package:chordz_app/widgets/songstore.dart';
+import 'package:chordz_app/view/widgets/songstore.dart';
 
-class Favorite extends StatefulWidget {
+class Favorite extends StatelessWidget {
   const Favorite({Key? key}) : super(key: key);
 
-  @override
-  State<Favorite> createState() => _FavoriteState();
-}
-
-class _FavoriteState extends State<Favorite> {
-  @override
   Widget build(BuildContext context) {
     FocusManager.instance.primaryFocus?.unfocus();
 
@@ -27,8 +21,6 @@ class _FavoriteState extends State<Favorite> {
               backgroundColor: Colors.transparent,
               extendBodyBehindAppBar: true,
               appBar: AppBar(
-                // leading:
-                //     IconButton(onPressed: () {}, icon: const Icon(Icons.arrow_back)),
                 elevation: 0,
                 backgroundColor: Colors.transparent,
                 title: const Text(
@@ -104,7 +96,7 @@ class _FavoriteState extends State<Favorite> {
                                       FavoriteDB.favoriteSongs
                                           .notifyListeners();
                                       FavoriteDB.delete(favorData[index].id);
-                                      setState(() {});
+
                                       const snackbar = SnackBar(
                                           backgroundColor: Color.fromARGB(
                                               255, 255, 255, 255),
@@ -125,7 +117,7 @@ class _FavoriteState extends State<Favorite> {
                                     )),
                                 onTap: () {
                                   List<SongModel> newlist = [...favorData];
-                                  setState(() {});
+
                                   GetSongs.player.stop();
                                   GetSongs.player.setAudioSource(
                                       GetSongs.createSongList(newlist),

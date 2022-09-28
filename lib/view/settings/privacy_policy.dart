@@ -1,4 +1,4 @@
-import 'package:chordz_app/widgets/style.dart';
+import 'package:chordz_app/view/widgets/style.dart';
 import 'package:flutter/material.dart';
 
 class Privacy extends StatefulWidget {
